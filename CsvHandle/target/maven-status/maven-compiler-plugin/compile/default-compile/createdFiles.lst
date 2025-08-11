@@ -1,0 +1,7 @@
+com\pruthviraj\CsvHandle\dto\ValidationResponse$ErrorDetail.class
+com\pruthviraj\CsvHandle\CsvHandleApplication.class
+com\pruthviraj\CsvHandle\dto\ValidationResponse.class
+com\pruthviraj\CsvHandle\service\CsvValidationService.class
+com\pruthviraj\CsvHandle\controller\HomeController.class
+com\pruthviraj\CsvHandle\config\WebConfig.class
+com\pruthviraj\CsvHandle\controller\CsvController.class

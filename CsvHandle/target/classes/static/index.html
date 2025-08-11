@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Upload & Validation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 90%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            color: #333;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .upload-section {
+            margin-bottom: 2rem;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-input-label {
+            display: block;
+            padding: 1rem;
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 1rem;
+        }
+
+        .file-input-label:hover {
+            background: #e9ecef;
+            border-color: #6c757d;
+        }
+
+        .file-input-label.dragover {
+            background: #e3f2fd;
+            border-color: #2196f3;
+        }
+
+        .upload-icon {
+            font-size: 2rem;
+            color: #6c757d;
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: transform 0.2s ease;
+            width: 100%;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .upload-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result-section {
+            margin-top: 2rem;
+            padding: 1rem;
+            border-radius: 8px;
+            min-height: 50px;
+        }
+
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .error-list {
+            list-style: none;
+            margin-top: 1rem;
+        }
+
+        .error-item {
+            background: white;
+            padding: 0.5rem;
+            margin: 0.5rem 0;
+            border-radius: 4px;
+            border-left: 4px solid #dc3545;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .sample-info {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .sample-info h3 {
+            color: #856404;
+            margin-bottom: 0.5rem;
+        }
+
+        .sample-info pre {
+            background: #f8f9fa;
+            padding: 0.5rem;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>CSV Upload & Validation</h1>
+        <p>Upload a CSV file to validate Name and DateOfBirth fields</p>
+    </div>
+
+    <div class="sample-info">
+        <h3>Expected CSV Format:</h3>
+        <pre>Name,DateOfBirth
+John Doe,1990-05-15
+Jane Smith,1985-07-20</pre>
+        <p><strong>Note:</strong> DateOfBirth must be in yyyy-MM-dd format</p>
+    </div>
+
+    <div class="upload-section">
+        <div class="file-input-wrapper">
+            <input type="file" id="csvFile" class="file-input" accept=".csv" />
+            <label for="csvFile" class="file-input-label" id="fileLabel">
+                <div class="upload-icon">📄</div>
+                <div>Click to select CSV file or drag and drop</div>
+                <div style="font-size: 0.8rem; margin-top: 0.5rem; color: #6c757d;">
+                    Selected file: <span id="fileName">None</span>
+                </div>
+            </label>
+        </div>
+        <button id="uploadBtn" class="upload-btn" disabled>Upload & Validate</button>
+    </div>
+
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <div>Processing your file...</div>
+    </div>
+
+    <div id="result" class="result-section" style="display: none;"></div>
+</div>
+
+<script>
+    const fileInput = document.getElementById('csvFile');
+    const fileLabel = document.getElementById('fileLabel');
+    const fileName = document.getElementById('fileName');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const loading = document.getElementById('loading');
+    const result = document.getElementById('result');
+
+    // File input change handler
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            fileName.textContent = file.name;
+            uploadBtn.disabled = false;
+            result.style.display = 'none';
+        } else {
+            fileName.textContent = 'None';
+            uploadBtn.disabled = true;
+        }
+    });
+
+    // Drag and drop handlers
+    fileLabel.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        fileLabel.classList.add('dragover');
+    });
+
+    fileLabel.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        fileLabel.classList.remove('dragover');
+    });
+
+    fileLabel.addEventListener('drop', function(e) {
+        e.preventDefault();
+        fileLabel.classList.remove('dragover');
+
+        const files = e.dataTransfer.files;
+        if (files.length > 0 && files[0].name.toLowerCase().endsWith('.csv')) {
+            fileInput.files = files;
+            fileName.textContent = files[0].name;
+            uploadBtn.disabled = false;
+            result.style.display = 'none';
+        }
+    });
+
+    // Upload button click handler
+    uploadBtn.addEventListener('click', function() {
+        const file = fileInput.files[0];
+        if (!file) {
+            alert('Please select a CSV file first');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        // Show loading
+        loading.style.display = 'block';
+        result.style.display = 'none';
+        uploadBtn.disabled = true;
+
+        // Make API call
+        fetch('http://localhost:8080/api/csv/upload', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            displayResult(data);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            displayError('Network error: Unable to connect to the server. Make sure the Spring Boot application is running on port 8080.');
+        })
+        .finally(() => {
+            loading.style.display = 'none';
+            uploadBtn.disabled = false;
+        });
+    });
+
+    function displayResult(data) {
+        result.style.display = 'block';
+
+        if (data.status === 'success') {
+            result.className = 'result-section success';
+            result.innerHTML = '<h3>✅ Validation Successful!</h3><p>All rows in the CSV file are valid.</p>';
+        } else {
+            result.className = 'result-section error';
+            let html = '<h3>❌ Validation Errors Found</h3>';
+
+            if (data.errors && data.errors.length > 0) {
+                html += '<ul class="error-list">';
+                data.errors.forEach(error => {
+                    html += `<li class="error-item"><strong>Row ${error.row}:</strong> ${error.message}</li>`;
+                });
+                html += '</ul>';
+            } else {
+                html += '<p>Unknown validation error occurred.</p>';
+            }
+
+            result.innerHTML = html;
+        }
+    }
+
+    function displayError(message) {
+        result.style.display = 'block';
+        result.className = 'result-section error';
+        result.innerHTML = `<h3>❌ Error</h3><p>${message}</p>`;
+    }
+</script>
+</body>
+</html>
